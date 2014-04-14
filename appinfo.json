@@ -1,0 +1,18 @@
+{
+  "uuid": "49128711-a6ff-4049-a8e3-cd391cdd507a",
+  "shortName": "Strap Accl",
+  "longName": "Strap Accelerometer",
+  "companyName": "MakeAwesomeHappen",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "capabilities": [ "configurable", "location" ],
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
