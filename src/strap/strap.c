@@ -1,6 +1,8 @@
 #include <pebble.h>
 #include "strap.h"
 
+
+
 #define TupletStaticCString(_key, _cstring, _length) \
 ((const Tuplet) { .type = TUPLE_CSTRING, .key = _key, .cstring = { .data = _cstring, .length = _length + 1 }})
 
@@ -24,9 +26,12 @@ static void send_accl_data();
 static void app_timer_accl_stop(void*);
 static void app_timer_accl_start(void*);
 static void accl_new_data(AccelData*, uint32_t);
+static void log_visit(void*);
 
 #ifdef STRAP_DEBUG
 static char* translate_error(AppMessageResult);
+static void strap_applog(char*);
+
 static char* translate_error(AppMessageResult result) {
   switch (result) {
     case APP_MSG_OK: return "APP_MSG_OK";
@@ -45,6 +50,11 @@ static char* translate_error(AppMessageResult result) {
     case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
     default: return "UNKNOWN ERROR";
   }
+}
+
+static void strap_applog(char* message)
+{
+    app_log(APP_LOG_LEVEL_INFO, "strap.c", 0, message);
 }
 #endif
 
@@ -104,7 +114,11 @@ static void send_accl_data()
         }
     }
     
+    dict_write_end(iter);
+    
     app_message_outbox_send();
+    
+    strap_log_visit("STRAP_START2");
 }
 
 static void app_timer_accl_stop(void* data) {
@@ -147,8 +161,8 @@ void strap_out_failed_handler(DictionaryIterator *iter, AppMessageResult result,
 void strap_init() {
     memset(cur_activity, 0, sizeof(cur_activity));
     strap_set_activity("UNKNOWN");
-    int in_size = app_message_inbox_size_maximum();
-    int out_size = app_message_outbox_size_maximum();
+    //int in_size = app_message_inbox_size_maximum();
+    //int out_size = app_message_outbox_size_maximum();
     app_message_register_outbox_sent(strap_out_sent_handler);
     app_message_register_outbox_failed(strap_out_failed_handler);
 
@@ -159,19 +173,29 @@ void strap_init() {
 
     // start sending accl data in 30 seconds
     app_timer_register(30 * 1000, app_timer_accl_start,NULL);
+    strap_log_visit("STRAP_START");
 }
 
 void strap_deinit() {
     accel_data_service_unsubscribe();
+    strap_log_visit("STRAP_FINISH");
 }
 
 void strap_log_visit(char* path) {
+    app_timer_register(1 * 1000, log_visit, path);
+}
+
+static void log_visit(void* vpath) {
+    
+    char* path = (char*)vpath;
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
-    
     Tuplet t = TupletStaticCString(KEY_OFFSET + T_LOG, path, strlen(path));
-    dict_write_tuplet(iter, &t);
-    app_message_outbox_send();
+    
+    if(dict_write_tuplet(iter, &t) == DICT_OK) {
+        dict_write_end(iter);
+        app_message_outbox_send();
+    }
 }
 
 void strap_set_activity(char* act) {

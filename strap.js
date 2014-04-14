@@ -96,6 +96,7 @@ var strap_api_log = function (data, min_readings, log_params) {
         }
     }
     else {
+        
         var req = new XMLHttpRequest();
         req.open("POST", strap_api_url, true);
 
@@ -103,7 +104,7 @@ var strap_api_log = function (data, min_readings, log_params) {
         var query = "app_id=" + lp['app_id']
             + "&resolution=" + (lp['resolution'] || "")
             + '&useragent=' + (lp['useragent']  || "")
-            + '&action_url=' + data[(KEY_OFFSET + T_LOG).toString()];
+            + '&action_url=' + data[(sac.KEY_OFFSET + sac.T_LOG).toString()]
             + '&visitor_id=' + (lp['visitor_id'] || Pebble.getAccountToken())
             + '&visitor_timeoffset=' + tz_offset;
             
@@ -166,4 +167,4 @@ var strap_api_convAcclData = function (data) {
 
 // ------------------------------
 //  End of Strap API
-// ------------------------------
+//

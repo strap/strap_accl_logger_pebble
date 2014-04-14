@@ -80,6 +80,7 @@ static void menu_select_callback(int index, void *ctx) {
     menu_items[index].subtitle = "";
     cur_started_menu = -1;
     strap_set_activity("UNKNOWN");
+    strap_log_visit(menu_item_keys[cur_started_menu]);
   }
   else {
     if( cur_started_menu != -1){
@@ -90,9 +91,10 @@ static void menu_select_callback(int index, void *ctx) {
     }
     cur_started_menu = index;
     menu_items[cur_started_menu].subtitle = "Logging";
+    strap_set_activity(menu_item_keys[cur_started_menu]);
+    strap_log_visit(menu_item_keys[cur_started_menu]);
   }
-  strap_set_activity(menu_item_keys[cur_started_menu]);
-  
+   
   // Mark the layer to be updated
   layer_mark_dirty(simple_menu_layer_get_layer(simple_menu_layer));
 }
@@ -173,7 +175,7 @@ static void click_config_provider(void *context) {
 
 
 static void window_load(Window *window) {
-
+    
 }
 
 static void window_unload(Window *window) {
@@ -182,8 +184,7 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
-  strap_init();
-
+  
   window = window_create();
   window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
@@ -198,6 +199,7 @@ static void init(void) {
   int in_size = app_message_inbox_size_maximum();
   int out_size = app_message_outbox_size_maximum();
   app_message_open(in_size, out_size);
+  strap_init();
 }
 
 static void deinit(void) {
