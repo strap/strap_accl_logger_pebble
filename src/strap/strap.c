@@ -20,13 +20,14 @@
 static AccelData accl_data[NUM_SAMPLES];
 static int report_accl = 0;
 static char cur_activity[15];
-
+static int retryCount = 0;
+static int retryMax = 10;
 
 static void send_accl_data();
 static void app_timer_accl_stop(void*);
 static void app_timer_accl_start(void*);
 static void accl_new_data(AccelData*, uint32_t);
-static void log_visit(void*);
+static void log_action(void*);
 
 #ifdef STRAP_DEBUG
 static char* translate_error(AppMessageResult);
@@ -60,7 +61,12 @@ static void strap_applog(char* message)
 
 static void send_accl_data()
 {
-    if(!report_accl)
+    bool haveBT = bluetooth_connection_service_peek();
+    if (!haveBT) {
+        app_log(APP_LOG_LEVEL_INFO, "C", 0, "ERROR No Bluetooth connection!");
+    }
+
+    if(!report_accl || !haveBT)  
         return;
 
     DictionaryIterator *iter;
@@ -118,7 +124,7 @@ static void send_accl_data()
     
     app_message_outbox_send();
     
-    strap_log_visit("STRAP_START2");
+    strap_log_action("STRAP_START2");
 }
 
 static void app_timer_accl_stop(void* data) {
@@ -131,6 +137,7 @@ static void app_timer_accl_stop(void* data) {
 
 static void app_timer_accl_start(void* data) {
     // set report flag to true to indicate we want to report accl data
+
     report_accl = 1;
     send_accl_data();
     
@@ -155,6 +162,16 @@ void strap_out_sent_handler(DictionaryIterator *iter, void *context)
 
 void strap_out_failed_handler(DictionaryIterator *iter, AppMessageResult result, void *context)
 {
+    // if a lot of failures start happening, we may have lost network 
+    // or connection to the Pebble app on the phone
+    // in this case, we need to stop accl from reporting
+    // otherwise the pebble will reset because we'll thrash the memory
+
+    retryCount++;
+    if (retryCount == retryMax) {
+        report_accl = 0;
+        return;
+    }
     send_accl_data();
 }
 
@@ -173,19 +190,19 @@ void strap_init() {
 
     // start sending accl data in 30 seconds
     app_timer_register(30 * 1000, app_timer_accl_start,NULL);
-    strap_log_visit("STRAP_START");
+    strap_log_action("STRAP_START");
 }
 
 void strap_deinit() {
     accel_data_service_unsubscribe();
-    strap_log_visit("STRAP_FINISH");
+    strap_log_action("STRAP_FINISH");
 }
 
-void strap_log_visit(char* path) {
-    app_timer_register(1 * 1000, log_visit, path);
+void strap_log_action(char* path) {
+    app_timer_register(1 * 1000, log_action, path);
 }
 
-static void log_visit(void* vpath) {
+static void log_action(void* vpath) {
     
     char* path = (char*)vpath;
     DictionaryIterator *iter;
@@ -201,7 +218,3 @@ static void log_visit(void* vpath) {
 void strap_set_activity(char* act) {
     strncpy(cur_activity, act, sizeof(cur_activity) - 1);
 }
-
-
-
-
