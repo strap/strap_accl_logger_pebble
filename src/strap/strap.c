@@ -62,6 +62,12 @@ static void send_accl_data()
 {
     if(!report_accl)
         return;
+        
+    if(!bluetooth_connection_service_peek()) {
+        // if bluetooth connection is down, retry in 30 seconds
+        app_timer_register(1 * 30 * 1000, app_timer_accl_start,NULL);
+        return;
+    }
 
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
@@ -117,8 +123,6 @@ static void send_accl_data()
     dict_write_end(iter);
     
     app_message_outbox_send();
-    
-    strap_log_visit("STRAP_START2");
 }
 
 static void app_timer_accl_stop(void* data) {
@@ -168,8 +172,8 @@ void strap_init() {
 
     //app_message_open(in_size, out_size);
 
-    accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
     accel_data_service_subscribe(NUM_SAMPLES, (AccelDataHandler)accl_new_data);
+    accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 
     // start sending accl data in 30 seconds
     app_timer_register(30 * 1000, app_timer_accl_start,NULL);
@@ -186,6 +190,11 @@ void strap_log_visit(char* path) {
 }
 
 static void log_visit(void* vpath) {
+    
+    if(!bluetooth_connection_service_peek()) {
+        // if bluetooth connection is down, drop log_visit
+        return;
+    }
     
     char* path = (char*)vpath;
     DictionaryIterator *iter;
