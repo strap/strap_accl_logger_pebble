@@ -80,7 +80,7 @@ static void menu_select_callback(int index, void *ctx) {
     menu_items[index].subtitle = "";
     cur_started_menu = -1;
     strap_set_activity("UNKNOWN");
-    strap_log_visit(menu_item_keys[cur_started_menu]);
+    strap_log_action(menu_item_keys[cur_started_menu]);
   }
   else {
     if( cur_started_menu != -1){
@@ -92,7 +92,7 @@ static void menu_select_callback(int index, void *ctx) {
     cur_started_menu = index;
     menu_items[cur_started_menu].subtitle = "Logging";
     strap_set_activity(menu_item_keys[cur_started_menu]);
-    strap_log_visit(menu_item_keys[cur_started_menu]);
+    strap_log_action(menu_item_keys[cur_started_menu]);
   }
    
   // Mark the layer to be updated
