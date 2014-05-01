@@ -129,8 +129,6 @@ static void send_accl_data()
     dict_write_end(iter);
     
     app_message_outbox_send();
-
-    strap_log_action("STRAP_START2");
 }
 
 static void app_timer_accl_stop(void* data) {
