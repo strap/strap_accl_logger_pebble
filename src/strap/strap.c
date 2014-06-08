@@ -39,7 +39,6 @@ static void accl_new_data(AccelData*, uint32_t);
 static void log_action(void*);
 static void app_timer_battery(void*);
 static void appendLog(char*);
-static void log_timer(void*);
 static void send_next_log(void*);
 static bool is_accl_available();
 static bool is_log_available();
@@ -315,21 +314,6 @@ static void plogs() {
     }
 }
 #endif
-
-static void log_timer(void* data) {
-#ifdef DEBUG
-    app_log(APP_LOG_LEVEL_INFO, "logtimer", 0, "running log timer");
-#endif
-    int tmpLog = curLog;
-    curLog = 0;
-    char buffer[LOG_COLS];
-    for(int i = 0; i < tmpLog; i++){
-        strcpy(buffer, logqueue[i]);
-        log_action(buffer);
-    }
-    
-    app_timer_register(curFreq * 1 * 60 * 1000,log_timer, NULL);
-}
 
 static void send_next_log(void* data) {
     int tmpLog = curLog;
