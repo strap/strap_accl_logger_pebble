@@ -85,8 +85,10 @@ var strap_api_log = function (data, min_readings, log_params) {
             req.onload = function(e) {
                 if (req.readyState == 4 && req.status == 200) {
                     if(req.status == 200) {
-                        console.log("Sent");
-                    } else { console.log("Error"); }
+                        //console.log("Sent");
+                    } 
+                    else { //console.log("Error"); 
+                    }
                 }
             }
             req.send(query);
@@ -118,8 +120,10 @@ var strap_api_log = function (data, min_readings, log_params) {
         req.onload = function(e) {
             if (req.readyState == 4 && req.status == 200) {
                 if(req.status == 200) {
-                    console.log("Sent");
-                } else { console.log("Error"); }
+                    //console.log("Sent");
+                } else { 
+                //console.log("Error"); 
+                }
             }
         }
         req.send(query);

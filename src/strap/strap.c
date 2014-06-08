@@ -18,6 +18,7 @@
 static AccelData accl_data[NUM_SAMPLES];
 static int report_accl = 0;
 static char cur_activity[15];
+static bool has_accl_data = false;
 //static int retryCount = 0;
 //static int retryMax = 10;
 
@@ -71,12 +72,19 @@ static char* translate_error(AppMessageResult result) {
 static void send_accl_data(void* data)
 {
     if(acclRetry != NULL){
-        app_timer_cancel(acclRetry);
+        if(app_timer_reschedule(acclRetry, 5000)) {
+            app_timer_cancel(acclRetry);
+        }
         acclRetry = NULL;
     }
 
     if(!report_accl)  
         return;
+        
+    if(has_accl_data == false){
+        acclRetry = app_timer_register(100, send_accl_data,NULL);
+        return;
+    }
         
     if(!bluetooth_connection_service_peek()) {
         // if bluetooth connection is down, retry in 30 seconds
@@ -163,17 +171,23 @@ static void send_accl_data(void* data)
         acclRetry = app_timer_register(500, send_accl_data,NULL);
         return;
     }
+    
+    has_accl_data = false;
 }
 
 static void app_timer_accl_stop(void* data) {
 
     if(acclStart != NULL){
-        app_timer_cancel(acclStart);
+        if(app_timer_reschedule(acclStart, 5000)) {
+            app_timer_cancel(acclStart);
+        }
         acclStart = NULL;
     }
     
     if(acclStop != NULL){
-        app_timer_cancel(acclStop);
+        if(app_timer_reschedule(acclStop, 5000)) {
+            app_timer_cancel(acclStop);
+        }
         acclStop = NULL;
     }
 
@@ -187,12 +201,16 @@ static void app_timer_accl_stop(void* data) {
 static void app_timer_accl_start(void* data) {
     
     if(acclStop != NULL){
-        app_timer_cancel(acclStop);
+        if(app_timer_reschedule(acclStop, 5000)) {
+            app_timer_cancel(acclStop);
+        }
         acclStop = NULL;
     }
     
     if(acclStart != NULL){
-        app_timer_cancel(acclStart);
+        if(app_timer_reschedule(acclStart, 5000)) {
+            app_timer_cancel(acclStart);
+        }
         acclStart = NULL;
     }
 
@@ -202,13 +220,15 @@ static void app_timer_accl_start(void* data) {
     report_accl = 1;
     send_accl_data(NULL);
     
-    // set timer that will stop reporting accl data after one minute
-    acclStop = app_timer_register(1 * 60 * 1000, app_timer_accl_stop,NULL);
+    // set timer that will stop reporting accl data after about one minute
+    acclStop = app_timer_register(80 * 1000, app_timer_accl_stop,NULL);
 }
 
 static void app_timer_battery(void* data) {
     if(battTimer != NULL){
-        app_timer_cancel(battTimer);
+        if(app_timer_reschedule(battTimer, 5000)) {
+            app_timer_cancel(battTimer);
+        }
         battTimer = NULL;
     }
 
@@ -229,6 +249,7 @@ static void accl_new_data(AccelData *data, uint32_t num_samples) {
         accl_data[i].timestamp = data[i].timestamp;
         accl_data[i].did_vibrate = data[i].did_vibrate;
     }
+    has_accl_data = true;
 }
 
 static bool is_accl_available() {
