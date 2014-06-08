@@ -2,7 +2,7 @@
 //  Start of Strap API
 // ------------------------------
 var strap_api_num_samples = 10;
-var strap_api_url = "http://api.straphq.com/create/visit/with/";
+var strap_api_url = "https://api.straphq.com/create/visit/with/";
 
 var strap_api_timer_send = null;
 
