@@ -34,6 +34,7 @@ static AppTimer* acclRetry = NULL;
 static AppTimer* battTimer = NULL;
 
 static void send_accl_data(void*);
+static void send_accl_data_core(void*);
 static void app_timer_accl_stop(void*);
 static void app_timer_accl_start(void*);
 static void accl_new_data(AccelData*, uint32_t);
@@ -69,7 +70,12 @@ static char* translate_error(AppMessageResult result) {
 
 #endif
 
-static void send_accl_data(void* data)
+static void send_accl_data(void* data) {
+    acclRetry = NULL;
+    send_accl_data_core(data);
+}
+
+static void send_accl_data_core(void* data)
 {
     if(acclRetry != NULL){
         if(app_timer_reschedule(acclRetry, 5000)) {
@@ -185,9 +191,6 @@ static void app_timer_accl_stop(void* data) {
     }
     
     if(acclStop != NULL){
-        if(app_timer_reschedule(acclStop, 5000)) {
-            app_timer_cancel(acclStop);
-        }
         acclStop = NULL;
     }
 
@@ -208,9 +211,6 @@ static void app_timer_accl_start(void* data) {
     }
     
     if(acclStart != NULL){
-        if(app_timer_reschedule(acclStart, 5000)) {
-            app_timer_cancel(acclStart);
-        }
         acclStart = NULL;
     }
 
@@ -218,7 +218,7 @@ static void app_timer_accl_start(void* data) {
     // set report flag to true to indicate we want to report accl data
 
     report_accl = 1;
-    send_accl_data(NULL);
+    send_accl_data_core(NULL);
     
     // set timer that will stop reporting accl data after about one minute
     acclStop = app_timer_register(80 * 1000, app_timer_accl_stop,NULL);
@@ -269,7 +269,7 @@ static bool is_log_available() {
 void strap_out_sent_handler(DictionaryIterator *iter, void *context)
 {
     if(is_accl_available()) {
-        send_accl_data(NULL);
+        send_accl_data_core(NULL);
     }
     else if(is_log_available()) {
         send_next_log(NULL);
@@ -279,7 +279,7 @@ void strap_out_sent_handler(DictionaryIterator *iter, void *context)
 void strap_out_failed_handler(DictionaryIterator *iter, AppMessageResult result, void *context)
 {
     if(is_accl_available()) {
-        send_accl_data(NULL);
+        send_accl_data_core(NULL);
     }
     else if(is_log_available()) {
         send_next_log(NULL);
