@@ -71,12 +71,14 @@ static char* translate_error(AppMessageResult result) {
 #endif
 
 static void send_accl_data(void* data) {
+    //app_log(APP_LOG_LEVEL_INFO, "send_accl_data", 0, "send_accl_data");
     acclRetry = NULL;
     send_accl_data_core(data);
 }
 
 static void send_accl_data_core(void* data)
 {
+    //app_log(APP_LOG_LEVEL_INFO, "send_accl_data_core", 0, "send_accl_data_core");
     if(acclRetry != NULL){
         if(app_timer_reschedule(acclRetry, 5000)) {
             app_timer_cancel(acclRetry);
@@ -182,7 +184,7 @@ static void send_accl_data_core(void* data)
 }
 
 static void app_timer_accl_stop(void* data) {
-
+    //app_log(APP_LOG_LEVEL_INFO, "app_timer_accl_stop", 0, "app_timer_accl_stop");
     if(acclStart != NULL){
         if(app_timer_reschedule(acclStart, 5000)) {
             app_timer_cancel(acclStart);
@@ -202,7 +204,7 @@ static void app_timer_accl_stop(void* data) {
 }
 
 static void app_timer_accl_start(void* data) {
-    
+    //app_log(APP_LOG_LEVEL_INFO, "app_timer_accl_start", 0, "app_timer_accl_start");
     if(acclStop != NULL){
         if(app_timer_reschedule(acclStop, 5000)) {
             app_timer_cancel(acclStop);
@@ -304,9 +306,9 @@ void strap_init() {
 
     // start sending accl data in 30 seconds
     acclStart = app_timer_register(30 * 1000, app_timer_accl_start,NULL);
-    battTimer = app_timer_register(1 * 10 * 1000, app_timer_battery,NULL);
+    battTimer = app_timer_register(20 * 1000, app_timer_battery,NULL);
     //app_timer_register(30 * 1000,log_timer, NULL);
-    app_timer_register(1  * 1000,log_action,"STRAP_START");
+    app_timer_register(10  * 1000,log_action,"STRAP_START");
 }
 
 void strap_deinit() {
